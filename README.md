@@ -98,16 +98,10 @@ Depois, acesse [`http://localhost:5500`](http://localhost:5500).
 - O assistente externo é carregado de uma CDN; avalie essa integração antes de usar dados reais.
 - O projeto ainda não possui suíte de testes automatizados nem pipeline de deploy configurado.
 
-## 📌 Próximos passos
 
-- [ ] Adicionar modo escuro
-- [ ] Incluir categorias, prioridades e datas de vencimento
-- [ ] Criar exportação e importação das tarefas
-- [ ] Definir licença do projeto
-- [ ] Adicionar testes de comportamento
+
 
 <div align="center">
 
-Feito com foco, simplicidade e um toque de roxo. 💜
 
 </div>
