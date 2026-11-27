@@ -10,6 +10,7 @@ import {
   type Dependency,
 } from "./domino";
 import "./style.css";
+import { askText, askConfirm } from "./dialogs";
 
 type Board = {
   id: string;
@@ -388,7 +389,7 @@ function App() {
     data.profiles.find((p) => p.id === id)?.display_name ?? "Participante";
   const rec = recommend(data.cards, data.deps);
   async function newBoard() {
-    const value = prompt("Nome do novo quadro:");
+    const value = await askText("Nome do novo quadro:", 100);
     if (!value?.trim()) return;
     await run(async () => {
       const { data, error } = await sb!.rpc("create_board", { p_name: value });
@@ -840,8 +841,9 @@ function App() {
                             <button
                               className="add-card"
                               disabled={busy}
-                              onClick={() => {
-                                const title = prompt("Título da tarefa:");
+                              onClick={async () => {
+                                const title =
+                                  await askText("Título da tarefa:");
                                 if (title?.trim())
                                   void run(() =>
                                     act("card.create", {
@@ -938,8 +940,8 @@ function App() {
                         ))}
                       </select>
                       <button
-                        onClick={() => {
-                          if (confirm("Remover participante?"))
+                        onClick={async () => {
+                          if (await askConfirm("Remover participante?"))
                             void run(() =>
                               act("member.remove", { user_id: m.user_id }),
                             );
@@ -949,9 +951,9 @@ function App() {
                       </button>
                       {board.owner_id === session.user.id && (
                         <button
-                          onClick={() => {
+                          onClick={async () => {
                             if (
-                              confirm(
+                              await askConfirm(
                                 "Transferir a propriedade para esta pessoa?",
                               )
                             )
@@ -1074,8 +1076,12 @@ function App() {
             </form>
             <button
               className="danger"
-              onClick={() => {
-                if (confirm("Arquivar o quadro para todos os participantes?"))
+              onClick={async () => {
+                if (
+                  await askConfirm(
+                    "Arquivar o quadro para todos os participantes?",
+                  )
+                )
                   void run(() => act("board.archive"));
               }}
             >
@@ -1492,8 +1498,8 @@ function CardModal({
           ))}
           {canEdit && !c.archived_at && (
             <button
-              onClick={() => {
-                const name = prompt("Nome da etiqueta:");
+              onClick={async () => {
+                const name = await askText("Nome da etiqueta:", 40);
                 if (name?.trim())
                   void run(() =>
                     act("label.create", { name, color: "#6355dc" }),
@@ -1537,7 +1543,9 @@ function CardModal({
               if (c.archived_at) {
                 if (await op("card.restore")) close();
               } else if (
-                confirm("Arquivar esta tarefa? Você poderá restaurá-la depois.")
+                await askConfirm(
+                  "Arquivar esta tarefa? Você poderá restaurá-la depois.",
+                )
               ) {
                 if (await op("card.archive")) close();
               }
@@ -1618,7 +1626,7 @@ function ColumnModal({
             className="danger"
             onClick={async () => {
               if (
-                confirm("Excluir esta coluna vazia?") &&
+                (await askConfirm("Excluir esta coluna vazia?")) &&
                 (await run(() =>
                   act("column.delete", { column_id: column.id }),
                 ))
