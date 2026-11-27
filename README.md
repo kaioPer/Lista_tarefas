@@ -1,107 +1,123 @@
-<div align="center">
+# Minha Lista · Efeito Dominó
 
-# ✦ Minha Lista
+Quadro Kanban colaborativo em React + TypeScript, hospedado como Static Site no Render e integrado ao Supabase (Auth, PostgreSQL e Realtime).
 
-### Pequenos passos, grandes resultados.
+O diferencial **Efeito Dominó** recomenda a tarefa disponível que libera mais tarefas imediatamente. Dependências são validadas no banco, com proteção contra ciclos, bloqueios e sobrescritas de edições antigas.
 
-Uma lista de tarefas minimalista, responsiva e persistida diretamente no navegador.
+## Recursos da primeira versão
 
-<p>
-  <img src="https://img.shields.io/badge/status-demo-6856e8?style=for-the-badge" alt="Status: demo">
-  <img src="https://img.shields.io/badge/HTML5-vanilla-e34f26?style=for-the-badge&logo=html5&logoColor=white" alt="HTML5">
-  <img src="https://img.shields.io/badge/JavaScript-vanilla-f7df1e?style=for-the-badge&logo=javascript&logoColor=111827" alt="JavaScript">
-  <img src="https://img.shields.io/badge/licença-a%20definir-7b83a3?style=for-the-badge" alt="Licença a definir">
-</p>
+- Cadastro, login, logout, confirmação de e-mail e recuperação de senha.
+- Quadros compartilhados, convites por link vinculados ao e-mail, permissões de administrador/editor/leitor e transferência de propriedade.
+- Colunas personalizáveis com tipo A fazer / Em andamento / Concluído.
+- Cartões com descrição, prazo, responsáveis, etiquetas, comentários e arquivamento.
+- Movimentação por arrastar ou menu; ordenação por posição da coluna e topo/fim do cartão.
+- Busca e filtros, histórico, atualização ao vivo e layout responsivo.
+- Efeito Dominó com explicação dos bloqueios e do impacto imediato.
 
-</div>
+Veja [arquitetura, regras e limites da entrega](docs/IMPLEMENTACAO.md).
 
-<br>
+## 1. Criar o Supabase
 
-## ✨ Visão geral
+1. Crie um **projeto novo e dedicado** em [Supabase](https://supabase.com/dashboard). Escolha uma região próxima da equipe e guarde a senha do banco em um local seguro.
+2. No **SQL Editor**, abra uma consulta, cole todo o conteúdo de [`supabase/migrations/202611260001_initial.sql`](supabase/migrations/202611260001_initial.sql) e execute uma única vez. A migração é transacional e cria tabelas, funções, permissões e a publicação Realtime. Não execute sobre um projeto com outras aplicações: ela revoga escrita direta das tabelas públicas.
+3. Em **Authentication → Providers → Email**, habilite login por e-mail e confirmação de e-mail. Configure senha mínima de pelo menos oito caracteres. A aceitação de convites exige e-mail confirmado.
+4. Em **Project Settings / Connect / API Keys**, copie a **Project URL** e a **publishable key** (`sb_publishable_...`). A chave pública legada `anon` também é aceita pelo cliente. Nunca use `service_role`, `sb_secret_...` nem a senha do banco nas variáveis `VITE_`.
+5. Confirme que RLS está habilitada nas 13 tabelas. A publicação `supabase_realtime` deve conter as tabelas definidas no final da migração.
+6. Para uso por outras pessoas, configure **SMTP próprio** nas configurações de Auth. O envio padrão do Supabase tem restrições e não deve ser a base do fluxo de e-mails em produção. Teste cadastro e recuperação com endereços reais da equipe.
 
-O **Minha Lista** ajuda a organizar o dia com uma experiência direta: adicione uma tarefa, acompanhe o que está pendente e marque o que já foi concluído. O estado fica salvo no dispositivo, então a lista continua disponível ao atualizar a página.
+Alternativa com Supabase CLI: vincule o projeto novo e aplique `supabase db push`. Não combine essa alternativa com execução manual da mesma migração. Se executou pelo SQL Editor, registre a migração no histórico do CLI antes de adotar o CLI.
 
-> ⚠️ **Atenção:** esta é uma demonstração com IA externa. Utilize apenas dados fictícios.
+## 2. Rodar localmente
 
-## 🎯 Recursos
-
-| Recurso | Descrição |
-| --- | --- |
-| ➕ Adicionar tarefas | Crie tarefas com até 160 caracteres. |
-| ✅ Concluir tarefas | Marque e desmarque tarefas com um clique. |
-| 🔎 Filtros | Alterne entre todas, pendentes e concluídas. |
-| ✏️ Editar e excluir | Atualize ou remova tarefas existentes. |
-| 🧹 Limpeza rápida | Remova todas as tarefas concluídas de uma vez. |
-| 💾 Persistência local | Dados armazenados no `localStorage` do navegador. |
-| 📱 Layout responsivo | Interface adaptada para desktop e mobile. |
-| 🤖 Assistente | Painel de assistência carregado via Page Agent. |
-
-## 🖥️ Interface
-
-<div align="center">
-
-```text
-┌──────────────────────────────────────────────┐
-│ ORGANIZE SEU DIA              sábado, 19/09  │
-│ Minha lista                                  │
-│ Pequenos passos, grandes resultados.         │
-│                                              │
-│  O que precisa ser feito?        [Adicionar] │
-│  [Todas] [Pendentes] [Concluídas]            │
-│  ○ Planejar a semana                  ✎  ×    │
-│  ● Revisar o projeto                 ✎  ×    │
-│  1 tarefa pendente        Salvo neste dispositivo │
-└──────────────────────────────────────────────┘
-```
-
-</div>
-
-## 🚀 Como executar
-
-Não há dependências ou etapa de build.
-
-### Opção 1 — abrir diretamente
-
-Abra o arquivo [`index.html`](./index.html) no navegador.
-
-### Opção 2 — servidor local
+Requer Node.js 24 e npm.
 
 ```bash
-git clone <URL_DO_SEU_REPOSITORIO>
-cd Lista_Tarefas
-python -m http.server 5500
+npm ci
 ```
 
-Depois, acesse [`http://localhost:5500`](http://localhost:5500).
+Copie `.env.example` para `.env.local` e preencha:
 
-## 🧩 Estrutura
+```dotenv
+VITE_SUPABASE_URL=https://SEU-PROJETO.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_SUA_CHAVE_PUBLICA
+```
+
+```bash
+npm run dev
+```
+
+Acesse `http://127.0.0.1:5173`. Em **Authentication → URL Configuration**, adicione `http://127.0.0.1:5173/` em Redirect URLs para testar confirmação e recuperação. Reinicie o servidor depois de mudar as variáveis.
+
+Sem as variáveis, a aplicação mostra uma orientação de configuração. Não há modo de demonstração que finja salvar dados.
+
+## 3. Publicar no Render
+
+Depois de integrar a branch de implementação no GitHub:
+
+1. No [Render](https://dashboard.render.com/), selecione **New → Static Site** e conecte `kaioPer/Lista_tarefas`.
+2. Escolha a branch de entrega (`main`, depois do merge). **Root Directory:** deixe vazio.
+3. **Build Command:** `npm ci && npm run build`.
+4. **Publish Directory:** `dist`.
+5. Adicione as duas variáveis de ambiente `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY`, com os valores do seu Supabase.
+6. Em **Redirects/Rewrites**, adicione Source `/*`, Destination `/index.html`, Action **Rewrite**.
+7. Faça o deploy e copie o endereço HTTPS gerado. Não precisa criar Web Service, disco ou banco no Render.
+
+O arquivo [`render.yaml`](render.yaml) também permite criar um Blueprint com essa configuração. Preencha as duas variáveis solicitadas. Se alterar variáveis Vite, faça um novo build/deploy: os valores são incorporados ao JavaScript público.
+
+## 4. Finalizar autenticação
+
+No Supabase, em **Authentication → URL Configuration**:
+
+- **Site URL:** `https://SEU-SITE.onrender.com`.
+- **Redirect URLs:** adicione exatamente `https://SEU-SITE.onrender.com/` e o endereço local usado no desenvolvimento.
+- Se adotar domínio próprio, atualize ambos e repita o teste dos e-mails.
+
+Crie uma conta pela aplicação, confirme o e-mail e crie seu quadro. Nenhum usuário ou administrador de aplicação é criado pela migração.
+
+Para convidar alguém: **Participantes → informar e-mail e papel → Gerar convite**. Copie o link e envie à pessoa por um canal privado. Ela cria/confirma a conta do mesmo e-mail e aceita o convite após entrar. O link expira em sete dias, pode ser revogado e não envia e-mail automaticamente.
+
+## 5. Homologar antes de apresentar
+
+Use dois navegadores ou uma janela anônima para contas diferentes:
+
+1. Crie um quadro, convide uma segunda conta como editor e confirme que ela só vê quadros dos quais participa.
+2. Crie A, B, C e D; faça B depender de A e C depender de A e D. A deve indicar que libera **uma tarefa**, não duas.
+3. Tente criar A dependendo de B: deve recusar o ciclo. Tente iniciar C: deve recusar por bloqueio.
+4. Conclua A. B deve ser desbloqueada nas duas telas; C continua bloqueada por D.
+5. Inicie B e tente reabrir A: deve recusar até B voltar para A fazer.
+6. Abra o mesmo cartão nas duas contas. Salve em uma e tente salvar a edição antiga na outra: deve pedir atualização, sem sobrescrever.
+7. Altere o convidado para leitor. Confirme que pode consultar, mas não criar, comentar nem alterar cartões.
+8. Remova o participante e confirme que perde acesso. Teste também recuperação de senha, convite revogado/expirado, arquivar/restaurar e acesso móvel.
+
+## Verificações automatizadas
+
+```bash
+npm test
+npm run build
+npx playwright install chromium
+npm run test:e2e
+npm audit
+```
+
+Os testes SQL usam PostgreSQL embarcado (PGlite) com um substituto mínimo do Auth; os testes de interface usam respostas simuladas. Auth/SMTP/Realtime e concorrência entre duas conexões reais devem ser homologados no seu Supabase. O CI executa testes e build a cada push e pull request.
+
+## Estrutura
 
 ```text
-.
-├── favicon.svg   # Ícone da aplicação
-├── index.html    # Estrutura, estilos e lógica da lista
-└── README.md     # Documentação do projeto
+src/                 Interface, cliente Supabase e cálculo do Efeito Dominó
+supabase/migrations/ Esquema, RLS e funções transacionais
+tests/               Testes das regras e do banco
+e2e/                 Testes no navegador
+render.yaml          Configuração de hospedagem
+docs/                Regras e limites
 ```
 
-## 🛠️ Tecnologias
+## Documentação dos serviços
 
-- HTML semântico
-- CSS puro, com layout responsivo e efeitos visuais
-- JavaScript puro, sem framework
-- `localStorage` para persistência no navegador
-- [Page Agent](https://github.com/nicepkg/page-agent) via CDN para o assistente
-
-## 🔐 Privacidade e limitações
-
-- As tarefas são armazenadas apenas no `localStorage` deste navegador.
-- Limpar os dados do site pode apagar a lista.
-- O assistente externo é carregado de uma CDN; avalie essa integração antes de usar dados reais.
-- O projeto ainda não possui suíte de testes automatizados nem pipeline de deploy configurado.
-
-
-
-
-<div align="center">
-
-
-</div>
+- [RLS do Supabase](https://supabase.com/docs/guides/database/postgres/row-level-security)
+- [Funções do banco](https://supabase.com/docs/guides/database/functions)
+- [Autenticação e senhas](https://supabase.com/docs/guides/auth/passwords)
+- [SMTP próprio](https://supabase.com/docs/guides/auth/auth-smtp)
+- [Realtime](https://supabase.com/docs/guides/realtime/subscribing-to-database-changes)
+- [Static Sites do Render](https://render.com/docs/static-sites)
+- [Rewrites](https://render.com/docs/redirects-rewrites)
