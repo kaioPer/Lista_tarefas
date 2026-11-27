@@ -19,6 +19,14 @@ export function blockers(id: string, cards: Card[], deps: Dependency[]) {
     .filter((c): c is Card => !!c && !c.completed_at);
 }
 export function impact(id: string, cards: Card[], deps: Dependency[]) {
+  const source = cards.find((card) => card.id === id);
+  if (
+    !source ||
+    source.completed_at ||
+    source.archived_at ||
+    blockers(id, cards, deps).length
+  )
+    return [];
   return cards.filter(
     (c) =>
       !c.archived_at &&

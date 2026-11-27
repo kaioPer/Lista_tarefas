@@ -15,6 +15,22 @@ const card = (id: string, extra: Partial<Card> = {}): Card => ({
   ...extra,
 });
 describe("Efeito Dominó", () => {
+  it("não atribui impacto imediato a pré-requisito concluído, arquivado ou bloqueado", () => {
+    const deps = [{ card_id: "B", depends_on_card_id: "A" }];
+    expect(
+      impact("A", [card("A", { completed_at: "2026-01-01" }), card("B")], deps),
+    ).toEqual([]);
+    expect(
+      impact("A", [card("A", { archived_at: "2026-01-01" }), card("B")], deps),
+    ).toEqual([]);
+    expect(
+      impact(
+        "A",
+        [card("A"), card("B"), card("C")],
+        [...deps, { card_id: "A", depends_on_card_id: "C" }],
+      ),
+    ).toEqual([]);
+  });
   it("conta somente tarefas realmente liberadas", () => {
     const cards = ["A", "B", "C", "D"].map((id) => card(id));
     const deps = [
