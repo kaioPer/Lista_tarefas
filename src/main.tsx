@@ -11,6 +11,7 @@ import {
 } from "./domino";
 import "./style.css";
 import { askText, askConfirm } from "./dialogs";
+import { BoardSummary } from "./BoardSummary";
 
 type Board = {
   id: string;
@@ -581,6 +582,14 @@ function App() {
                     )}
                   </p>
                 )}
+                {!loading && (
+                  <BoardSummary
+                    cards={data.cards}
+                    deps={data.deps}
+                    labels={data.labels}
+                    tagged={data.tagged}
+                  />
+                )}
                 <section className="domino-banner">
                   <div className="domino-icon">
                     ▰<br /> ▰
@@ -615,6 +624,33 @@ function App() {
                     </button>
                   )}
                 </section>
+                <nav
+                  className="category-tabs"
+                  aria-label="Filtrar por categoria"
+                >
+                  <button
+                    type="button"
+                    className={!tag ? "active" : ""}
+                    aria-pressed={!tag}
+                    onClick={() => setTag("")}
+                  >
+                    Todas
+                  </button>
+                  {data.labels.map((label) => (
+                    <button
+                      key={label.id}
+                      type="button"
+                      className={tag === label.id ? "active" : ""}
+                      aria-pressed={tag === label.id}
+                      onClick={() => setTag(label.id)}
+                    >
+                      {label.name}
+                    </button>
+                  ))}
+                  <span>
+                    Resumo das tarefas ativas · filtros aplicados aos cartões
+                  </span>
+                </nav>
                 <div className="filters">
                   <input
                     aria-label="Pesquisar tarefas"
@@ -743,6 +779,23 @@ function App() {
                             return (
                               <article
                                 key={c.id}
+                                style={
+                                  {
+                                    "--card-accent":
+                                      data.labels.find((label) =>
+                                        data.tagged.some(
+                                          (t) =>
+                                            t.card_id === c.id &&
+                                            t.label_id === label.id,
+                                        ),
+                                      )?.color ??
+                                      (c.completed_at
+                                        ? "#4ade80"
+                                        : blocked.length
+                                          ? "#fbbf24"
+                                          : "#60a5fa"),
+                                  } as React.CSSProperties
+                                }
                                 className={
                                   "card " +
                                   (blocked.length && !c.completed_at
@@ -782,6 +835,11 @@ function App() {
                                 >
                                   {c.title}
                                 </button>
+                                {c.description && (
+                                  <p className="card-description">
+                                    {c.description}
+                                  </p>
+                                )}
                                 {!c.completed_at && (
                                   <small
                                     className={
@@ -793,7 +851,7 @@ function App() {
                                     {blocked.length
                                       ? `⊘ Bloqueada por ${blocked.length}`
                                       : releases.length
-                                        ? `↗ Libera ${releases.length} tarefas`
+                                        ? `↗ Libera ${releases.length} ${releases.length === 1 ? "tarefa" : "tarefas"}`
                                         : "○ Disponível"}
                                   </small>
                                 )}
